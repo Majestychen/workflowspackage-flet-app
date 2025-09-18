@@ -17,34 +17,32 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11' # 推荐使用 3.11 或更高版本
+          python-version: '3.11'
 
       - name: Install Flet
         run: |
           pip install flet
+
+      - name: Debug Flet installation
+        run: |
+          python --version
+          pip show flet
+          flet --version
+          flet --help
+
+      - name: Check pack command syntax
+        run: |
+          flet pack --help
 
       - name: Install dependencies (if any)
         run: |
           # 如果有 requirements.txt 文件，取消下面的注释
           # pip install -r requirements.txt
 
-      - name: Install Flet CLI (if needed)
+      - name: Package application (simple command)
         run: |
-          pip install flet-cli
-
-      - name: Package for Desktop
-        run: |
-          flet pack . --build desktop
-          
-          
-
-      - name: Package for Web
-        run: |
-          flet pack --name myapp --dir . --build web
-
-      - name: Package for Mobile (Android)
-        run: |
-          flet pack --name myapp --dir . --build android
+          # 先尝试最基本的打包命令
+          flet pack .
 
       - name: Upload Packages
         uses: actions/upload-artifact@v4
