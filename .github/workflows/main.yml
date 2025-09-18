@@ -7,8 +7,114 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  build-linux:
     runs-on: ubuntu-latest
+    name: Build for Linux
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install flet pyinstaller
+          # pip install -r requirements.txt
+
+      - name: Build Linux application
+        run: |
+          if [ -f "main.py" ]; then
+              pyinstaller --onefile --name myapp-linux main.py
+          elif [ -f "app.py" ]; then
+              pyinstaller --onefile --name myapp-linux app.py
+          else
+              echo "Error: No main Python file found"
+              exit 1
+          fi
+
+      - name: Upload Linux Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-package
+          path: dist/myapp-linux
+
+  build-windows:
+    runs-on: windows-latest
+    name: Build for Windows
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install flet pyinstaller
+          # pip install -r requirements.txt
+
+      - name: Build Windows application
+        run: |
+          if (Test-Path "main.py") {
+              pyinstaller --onefile --name myapp-windows --windowed main.py
+          } elseif (Test-Path "app.py") {
+              pyinstaller --onefile --name myapp-windows --windowed app.py
+          } else {
+              Write-Error "Error: No main Python file found"
+              exit 1
+          }
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-package
+          path: dist/myapp-windows.exe
+
+  build-macos:
+    runs-on: macos-latest
+    name: Build for macOS
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install flet pyinstaller
+          # pip install -r requirements.txt
+
+      - name: Build macOS application
+        run: |
+          if [ -f "main.py" ]; then
+              pyinstaller --onefile --name myapp-macos --windowed main.py
+          elif [ -f "app.py" ]; then
+              pyinstaller --onefile --name myapp-macos --windowed app.py
+          else
+              echo "Error: No main Python file found"
+              exit 1
+          fi
+
+      - name: Upload macOS Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-package
+          path: dist/myapp-macos
+
+  build-android:
+    runs-on: ubuntu-latest
+    name: Build for Android
     
     steps:
       - name: Checkout code
@@ -23,53 +129,85 @@ jobs:
         run: |
           pip install flet
 
-      - name: Install pyinstaller
-        run: |
-          pip install pyinstaller
-          
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-      - name: Debug Flet installation
-        run: |
-          python --version
-          pip show flet
-          flet --version
-          flet --help
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v2
 
-      - name: Check pack command syntax
+      - name: Build Android APK
         run: |
-          flet pack --help
+          # 使用 Flet 的 Android 构建功能
+          python -m flet build apk --build-mode release
+        env:
+          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+          ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
 
-      - name: Install dependencies (if any)
-        run: |
-          # 如果有 requirements.txt 文件，取消下面的注释
-          # pip install -r requirements.txt
-
-      - name: Install Flet CLI (if needed)
-        run: |
-          pip install flet-cli
-
-      - name: Package for Windows
-        run: |
-          flet build windows main.py
-
-      - name: Package for Linux
-        run: |
-          flet build linux main.py
-
-      - name: Package for macOS
-        run: |
-          flet build macos main.py
-
-      - name: Package for Web
-        run: |
-          flet build --name myapp --dir main.py --build web
-
-      - name: Package for Mobile (Android)
-        run: |
-          flet build --name myapp --dir main.py --build android
-
-      - name: Upload Packages
+      - name: Upload Android Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: flet-packages
-          path: build/*
+          name: android-apk
+          path: build/android/*.apk
+
+  build-ios:
+    runs-on: macos-latest  # iOS 构建必须在 macOS 上
+    name: Build for iOS
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Flet
+        run: |
+          pip install flet
+
+      - name: Set up Xcode
+        uses: actions/setup-xcode@v2
+        with:
+          xcode-version: '15.0'  # 使用最新的稳定版本
+
+      - name: Build iOS app
+        run: |
+          # 使用 Flet 的 iOS 构建功能
+          python -m flet build ios --build-mode release
+
+      - name: Upload iOS Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-app
+          path: build/ios/
+
+  build-web:
+    runs-on: ubuntu-latest
+    name: Build for Web
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Flet
+        run: |
+          pip install flet
+
+      - name: Build Web application
+        run: |
+          python -m flet build web --output build/web
+
+      - name: Upload Web Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-package
+          path: build/web
