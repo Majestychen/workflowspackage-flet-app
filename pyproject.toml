@@ -1,0 +1,9 @@
+[project]
+name = "myapp"
+version = "0.1.0"
+description = "My Flet Application"
+
+[tool.flet]
+product-name = "MyProduct"
+product-company = "MyCompany"
+bundle-identifier = "com.mycompany.myapp"
