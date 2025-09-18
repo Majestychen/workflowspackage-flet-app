@@ -50,23 +50,23 @@ jobs:
 
       - name: Package for Windows
         run: |
-          flet pack windows main.py
+          flet build windows main.py
 
       - name: Package for Linux
         run: |
-          flet pack linux main.py
+          flet build linux main.py
 
       - name: Package for macOS
         run: |
-          flet pack macos main.py
+          flet build macos main.py
 
       - name: Package for Web
         run: |
-          flet pack --name myapp --dir main.py --build web
+          flet build --name myapp --dir main.py --build web
 
       - name: Package for Mobile (Android)
         run: |
-          flet pack --name myapp --dir main.py --build android
+          flet build --name myapp --dir main.py --build android
 
       - name: Upload Packages
         uses: actions/upload-artifact@v4
