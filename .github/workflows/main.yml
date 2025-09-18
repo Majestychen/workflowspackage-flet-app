@@ -44,10 +44,29 @@ jobs:
           # 如果有 requirements.txt 文件，取消下面的注释
           # pip install -r requirements.txt
 
-      - name: Package application (simple command)
+      - name: Install Flet CLI (if needed)
         run: |
-          # 先尝试最基本的打包命令
-          flet pack main.py
+          pip install flet-cli
+
+      - name: Package for Windows
+        run: |
+          flet pack windows main.py
+
+      - name: Package for Linux
+        run: |
+          flet pack linux main.py
+
+      - name: Package for macOS
+        run: |
+          flet pack macos main.py
+
+      - name: Package for Web
+        run: |
+          flet pack --name myapp --dir main.py --build web
+
+      - name: Package for Mobile (Android)
+        run: |
+          flet pack --name myapp --dir main.py --build android
 
       - name: Upload Packages
         uses: actions/upload-artifact@v4
