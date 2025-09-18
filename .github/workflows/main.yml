@@ -34,8 +34,8 @@ jobs:
 
       - name: Package for Desktop
         run: |
-          # flet pack --name myapp --dir . --build desktop
-          flet pack  --name "CounterApp"  --description "My Flet Application"  --product-name "MyProduct"  --product-company "MyCompany"  --dir .  --build desktop  --release
+          flet pack --name counterapp --dir . --build desktop
+          
           
 
       - name: Package for Web
