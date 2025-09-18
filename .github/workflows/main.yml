@@ -17,30 +17,31 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.8' # Specify your Python version
+          python-version: '3.8' # 指定你的 Python 版本
 
-      - name: Install dependencies
+      - name: Install Flet
         run: |
-            # pip install -r requirements.txt
+          pip install flet
+
+      - name: Install dependencies (if any)
+        run: |
+          # 如果有 requirements.txt 文件，取消下面的注释
+          # pip install -r requirements.txt
 
       - name: Package for Desktop
         run: |
-          # Example packaging command for desktop
-          flet package --target desktop          
+          flet package --target desktop
 
       - name: Package for Web
         run: |
-          # Example packaging command for web
-          flet package --target web          
+          flet package --target web
 
       - name: Package for Mobile
         run: |
-          # Example packaging command for mobile
-          flet package --target mobile          
+          flet package --target mobile
 
       - name: Upload Packages
         uses: actions/upload-artifact@v4
         with:
           name: flet-packages
-          path: |
-                        dist/*
+          path: dist/*
