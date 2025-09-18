@@ -34,7 +34,7 @@ jobs:
 
       - name: Package for Desktop
         run: |
-          flet pack --name counterapp --dir . --build desktop
+          flet pack . --build desktop
           
           
 
