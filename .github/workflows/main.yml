@@ -23,6 +23,11 @@ jobs:
         run: |
           pip install flet
 
+      - name: Install pyinstaller
+        run: |
+          pip install pyinstaller
+          
+
       - name: Debug Flet installation
         run: |
           python --version
