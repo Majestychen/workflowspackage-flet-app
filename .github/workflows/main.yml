@@ -1,12 +1,100 @@
-name: Package Flet App
+name: All Builds (Linux, macOS, Windows, Android, IPA, APK, AAB)
 
 on:
+  # Runs on push to any of the below branches
   push:
-    branches: [main]
+    branches:
+      - master
+      - main
+  # Runs on pull request events that target one of the below branches
   pull_request:
-    branches: [main]
+    branches:
+      - master
+      - main
+
+  # Allows you to run this workflow manually from the Actions tab of the repository
+  workflow_dispatch:
+
+env:
+  # https://flet.dev/docs/publish#versioning
+  BUILD_NUMBER: 1
+  BUILD_VERSION: 1.0.0
+  PYTHON_VERSION: 3.12.2
+  FLUTTER_VERSION: 3.22.2
 
 jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install Python Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+
+    - name: Patch for linux build
+      run: |
+        flutter doctor
+        sudo apt-get update -y
+        sudo apt-get install -y ninja-build libgtk-3-dev
+        flutter doctor
+    - name: Flet Build Linux
+      run: |
+        flutter config --no-analytics 
+        flet build linux --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION
+    - name: Upload Linux Artifact
+      uses: actions/upload-artifact@v4.3.4
+      with:
+        name: linux-build-artifact
+        path: build/linux
+        if-no-files-found: warn
+        overwrite: false
+
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install Python Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+
+    - name: Flet Build macOS
+      run: |
+        flutter config --no-analytics
+        flet build macos --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION
+    - name: Upload macOS Artifact
+      uses: actions/upload-artifact@v4.3.4
+      with:
+        name: macos-build-artifact
+        path: build/macos
+        if-no-files-found: warn
+        overwrite: false
+
   build-windows:
     runs-on: windows-latest
     name: Build for Windows
@@ -46,142 +134,109 @@ jobs:
           name: windows-package
           path: dist/myapp-windows.exe
 
-  build-linux:
-    runs-on: ubuntu-latest
-    name: Build for Linux
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: |
-          pip install flet pyinstaller flet-desktop
-          # pip install -r requirements.txt
-
-      - name: Build Linux application
-        run: |
-          if [ -f "main.py" ]; then
-              pyinstaller --onefile --name myapp-linux --hidden-import flet_desktop main.py
-          elif [ -f "app.py" ]; then
-              pyinstaller --onefile --name myapp-linux --hidden-import flet_desktop app.py
-          else
-              echo "Error: No main Python file found"
-              exit 1
-          fi
-
-      - name: Upload Linux Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-package
-          path: dist/myapp-linux
-
-  build-web:
-    runs-on: ubuntu-latest
-    name: Build for Web
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Install Flet
-        run: |
-          pip install flet
-
-      - name: Build Web application
-        run: |
-          python -c "import flet; flet.build('web', output_dir='build/web')" || echo "Web build completed"
-
-      - name: Upload Web Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-package
-          path: build/web
-
-  # 移动平台构建（可选，可能需要额外配置）
-  build-android-full:
-    runs-on: ubuntu-latest
-    name: Build Android APK (Full Setup)
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-  
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-  
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-  
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-  
-      - name: Install Flet
-        run: |
-          pip install flet
-  
-      - name: Accept Android licenses
-        run: |
-          yes | sdkmanager --licenses || true
-  
-      - name: Install Android build tools
-        run: |
-          sdkmanager "build-tools;34.0.0"
-          sdkmanager "platforms;android-33"
-  
-      - name: Build Android APK
-        run: |
-          # 设置环境变量
-          export ANDROID_HOME=$ANDROID_SDK_ROOT
-          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
-          
-          echo "Building Android APK..."
-          python -m flet build apk --build-mode debug --output android_build
-          
-          # 检查是否生成APK
-          if [ -f "android_build/app-debug.apk" ]; then
-            echo "APK generated successfully!"
-            ls -la android_build/
-          else
-            echo "APK generation failed, creating placeholder..."
-            mkdir -p android_build
-            echo "Real Android build requires additional configuration" > android_build/BUILD-NOTES.txt
-          fi
-        
-  build-ios:
+  build-aab:
     runs-on: macos-latest
-    name: Build for iOS
-    needs: build-web
-    
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
+    - name: Setup Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install Flet
-        run: |
-          pip install flet
+    - name: Install Python Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
 
-      - name: Try iOS build
-        run: |
-          echo "iOS build requires Xcode and developer account setup"
-          # python -c "import flet; flet.build('ios', build_mode='debug')" || echo "iOS build failed - needs setup"
+    - name: Flet Build AAB
+      run: |
+        flutter config --no-analytics
+        flet build aab --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION
+    - name: Upload AAB Artifact
+      uses: actions/upload-artifact@v4.3.4
+      with:
+        name: aab-build-artifact
+        path: build/aab
+        if-no-files-found: warn
+        overwrite: false
+
+  build-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install Python Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4.2.1
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
+    - name: Flet Build APK
+      run: |
+        flutter config --no-analytics
+        flet build apk --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4.3.4
+      with:
+        name: apk-build-artifact
+        path: build/apk
+        if-no-files-found: warn
+        overwrite: false
+
+  build-ipa:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install Python Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+
+    - name: Flet Build IPA
+      run: |
+        flutter config --no-analytics
+        flet build ipa --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION 
+    - name: Upload IPA Artifact
+      uses: actions/upload-artifact@v4.3.4
+      with:
+        name: ipa-build-artifact
+        path: build/ipa
+        if-no-files-found: warn
+        overwrite: false
+
+
