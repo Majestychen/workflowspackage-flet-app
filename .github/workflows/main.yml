@@ -37,7 +37,7 @@ jobs:
     - name: Setup Flutter (auto version)
       uses: subosito/flutter-action@v2
       with:
-        channel: stable  # 让 action 自动选择最新的稳定版本
+        channel: stable
 
     - name: Check Flutter and Dart versions
       run: |
@@ -45,17 +45,11 @@ jobs:
         flutter --version
         echo "Dart version:"
         dart --version
-        flutter doctor -v
 
     - name: Patch for linux build
       run: |
         sudo apt-get update -y
         sudo apt-get install -y ninja-build libgtk-3-dev
-
-    - name: Clean flutter cache
-      run: |
-        flutter clean
-        flutter pub cache repair
 
     - name: Flet Build Linux
       run: |
@@ -97,12 +91,6 @@ jobs:
       run: |
         flutter --version
         dart --version
-        flutter doctor -v
-
-    - name: Clean flutter cache
-      run: |
-        flutter clean
-        flutter pub cache repair
 
     - name: Flet Build macOS
       run: |
@@ -179,12 +167,6 @@ jobs:
       run: |
         flutter --version
         dart --version
-        flutter doctor -v
-
-    - name: Clean flutter cache
-      run: |
-        flutter clean
-        flutter pub cache repair
 
     - name: Flet Build AAB
       run: |
@@ -232,12 +214,6 @@ jobs:
       run: |
         flutter --version
         dart --version
-        flutter doctor -v
-
-    - name: Clean flutter cache
-      run: |
-        flutter clean
-        flutter pub cache repair
 
     - name: Flet Build APK
       run: |
@@ -279,12 +255,6 @@ jobs:
       run: |
         flutter --version
         dart --version
-        flutter doctor -v
-
-    - name: Clean flutter cache
-      run: |
-        flutter clean
-        flutter pub cache repair
 
     - name: Flet Build IPA
       run: |
